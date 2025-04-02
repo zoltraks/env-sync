@@ -389,14 +389,14 @@ if [ -n "$final_content" ]
 then
     if [ -n "$output_file" ]
     then
-        echo -e -n "$final_content" > "$output_file"
+        echo -n "$final_content" > "$output_file"
         log verbose "New content written to: $output_file"
         if [ "$verbose" = true ]
         then
             echo -n "$final_content"
         fi
     else
-        echo -e -n "$final_content"
+        echo -n "$final_content"
     fi
 fi
 
