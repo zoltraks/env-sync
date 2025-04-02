@@ -28,15 +28,15 @@ print_help() {
     echo ""
     echo "Options:"
     echo ""
-    echo "  --help      Show this help message and exit."
-    echo "  --verbose   Print verbose messages."
-    echo "  --time      Print time in messages."
-    echo "  --last      Change mode to read the last occurrence of variables."
-    echo "  --remove    Remove variables."
-    echo "  --append    Add missing variables."
-    echo "  --missing   Show only non-existing variables."
-    echo "  --obsolete  Show variables that should not exist anymore."
-    echo "  --sort      Sort variables by name."
+    echo "  --help      Show this help message and exit"
+    echo "  --verbose   Print verbose messages"
+    echo "  --time      Print time in messages"
+    echo "  --last      Change mode to read the last occurrence of variables"
+    echo "  --remove    Remove variables"
+    echo "  --append    Add missing variables"
+    echo "  --missing   Show only non-existing variables"
+    echo "  --obsolete  Show variables that should not exist anymore"
+    echo "  --sort      Sort variables by name"
     echo ""
     echo "Using remove or append option will result in modified target file printed or optionally written to output file."
 }
@@ -80,8 +80,10 @@ log() {
 # Parse command-line arguments
 options_end=false
 args=()  # Array to store non-option arguments (files)
-for arg in "$@"; do
-    if [ "$options_end" = true ] || ! echo "$arg" | grep -q '^--'; then
+for arg in "$@"
+do
+    if [ "$options_end" = true ] || ! echo "$arg" | grep -q '^--'
+    then
         args+=("$arg")
     else
         case "$arg" in
@@ -109,22 +111,26 @@ for arg in "$@"; do
 done
 
 # Ensure two files are provided
-if [ "${#args[@]}" -ne 2 ]; then
-    log error "You must provide two file locations: source.env and target.env."
+if [ "${#args[@]}" -lt 2 ]
+then
+    log error "You must provide at least two file locations: source.env and target.env."
     exit 1
 fi
 
 source_file="${args[0]}"
 target_file="${args[1]}"
+output_file="${args[2]}"
 
 # Check if source file exists
-if [ ! -f "$source_file" ]; then
+if [ ! -f "$source_file" ]
+then
     log error "Source file '$source_file' does not exist."
     exit 1
 fi
 
 # Check if target file exists
-if [ ! -f "$target_file" ]; then
+if [ ! -f "$target_file" ]
+then
     log error "Target file '$target_file' does not exist."
     exit 1
 fi
@@ -143,7 +149,13 @@ repeat_char() {
 }
 
 log verbose "Source file: $source_file"
+
 log verbose "Target file: $target_file"
+
+if [ -n "$output_file" ]
+then
+    log verbose "Output file: $output_file"
+fi
 
 # Extract variables from a file
 process_file() {
@@ -223,7 +235,8 @@ then
     target_keys=("${sorted_array[@]}")
 fi
 
-if [ "$remove" = "false" ] && [ "$append" = "false" ] && [ "$missing" = "false" ] && [ "$obsolete" = "false" ]; then
+if [ "$remove" = "false" ] && [ "$append" = "false" ] && [ "$missing" = "false" ] && [ "$obsolete" = "false" ]
+then
     nop=true
 else
     nop=false
@@ -236,7 +249,8 @@ then
     echo $source_file
     repeat_char "-" $source_file
     echo ""
-    for name in "${source_keys[@]}"; do
+    for name in "${source_keys[@]}"
+    do
         echo "$name=${source_variables[$name]}"
     done
     echo ""
@@ -245,7 +259,8 @@ then
     echo $target_file
     repeat_char "-" $target_file
     echo ""
-    for name in "${target_keys[@]}"; do
+    for name in "${target_keys[@]}"
+    do
         echo "$name=${target_variables[$name]}"
     done
     echo ""
@@ -261,17 +276,21 @@ then
     fi
 
     obsolete_found=false
-    for tgt in "${target_keys[@]}"; do
+    for tgt in "${target_keys[@]}"
+    do
         tgt_lower=$(echo "$tgt" | tr '[:upper:]' '[:lower:]')
         found=false
-        for src in "${source_keys[@]}"; do
+        for src in "${source_keys[@]}"
+        do
             src_lower=$(echo "$src" | tr '[:upper:]' '[:lower:]')
-            if [ "$tgt_lower" = "$src_lower" ]; then
+            if [ "$tgt_lower" = "$src_lower" ]
+            then
                 found=true
                 break
             fi
         done
-        if [ "$found" = false ]; then
+        if [ "$found" = false ]
+        then
             echo "$tgt=${target_variables[$tgt]}"
             obsolete_found=true
         fi
@@ -297,17 +316,21 @@ then
     fi
 
     missing_found=false
-    for src in "${source_keys[@]}"; do
+    for src in "${source_keys[@]}"
+    do
         src_lower=$(echo "$src" | tr '[:upper:]' '[:lower:]')
         found=false
-        for tgt in "${target_keys[@]}"; do
+        for tgt in "${target_keys[@]}"
+        do
             tgt_lower=$(echo "$tgt" | tr '[:upper:]' '[:lower:]')
-            if [ "$src_lower" = "$tgt_lower" ]; then
+            if [ "$src_lower" = "$tgt_lower" ]
+            then
                 found=true
                 break
             fi
         done
-        if [ "$found" = false ]; then
+        if [ "$found" = false ]
+        then
             echo "$src=${source_variables[$src]}"
             missing_found=true
         fi
