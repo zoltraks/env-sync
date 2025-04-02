@@ -346,4 +346,58 @@ then
     fi
 fi
 
+# Append missing variables from source to target
+if [ "$append" = true ]
+then
+    log verbose "Appending missing variables..."
+
+    # Build new content for the target file
+    new_content=""
+    for source_key in "${source_keys[@]}"
+    do
+        source_key_lower=$(echo "$source_key" | tr '[:upper:]' '[:lower:]')
+        found=false
+        for target_key in "${target_keys[@]}"
+        do
+            target_key_lower=$(echo "$target_key" | tr '[:upper:]' '[:lower:]')
+            if [ "$source_key_lower" = "$target_key_lower" ]
+            then
+                found=true
+                break
+            fi
+        done
+
+        # Add missing variables to new content
+        if [ "$found" = false ]
+        then
+            new_content+="$source_key=${source_variables[$source_key]}"
+            new_content+=$'\n' 
+        fi
+    done
+
+    # Prepare the final modified content
+    final_content=$(cat "$target_file")
+    if [ -n "$new_content" ]
+    then
+        final_content+=$'\n'
+        final_content+="$new_content"     
+    fi
+fi
+
+# Output or write the modified content if final_content is not empty
+if [ -n "$final_content" ]
+then
+    if [ -n "$output_file" ]
+    then
+        echo -e -n "$final_content" > "$output_file"
+        log verbose "New content written to: $output_file"
+        if [ "$verbose" = true ]
+        then
+            echo -n "$final_content"
+        fi
+    else
+        echo -e -n "$final_content"
+    fi
+fi
+
 log verbose "It is done for now..."
