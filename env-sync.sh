@@ -21,7 +21,7 @@ obsolete=false
 sort=false
 time=false
 
-# Print help
+# Print help message
 print_help() {
     script_name=$(basename "$0")
     echo "Usage: $script_name [options] source.env target.env [output.env]"
@@ -172,9 +172,9 @@ process_file() {
             [[:space:]]*\#*) continue ;; 
         esac
 
-        if echo "$line" | grep -qE "^[a-zA-Z][^=]*="
+        if echo "$line" | grep -qE "^[[:space:]]*[a-zA-Z_][^=]*="
         then
-            var_name=$(echo "$line" | cut -d '=' -f 1)
+            var_name=$(echo "$line" | cut -d '=' -f 1 | tr -d ' ')
             var_lower=$(echo "$var_name" | tr '[:upper:]' '[:lower:]')
             var_value=$(echo "$line" | cut -d '=' -f 2-)
 
@@ -346,6 +346,7 @@ then
     fi
 fi
 
+
 # Append missing variables from source to target
 if [ "$append" = true ]
 then
@@ -370,8 +371,10 @@ then
         # Add missing variables to new content
         if [ "$found" = false ]
         then
-            new_content+="$source_key=${source_variables[$source_key]}"
-            new_content+=$'\n' 
+            line="$source_key=${source_variables[$source_key]}"
+            log verbose "Added missing variable: $line"
+            new_content+=$line
+            new_content+=$'\n'
         fi
     done
 
@@ -382,6 +385,49 @@ then
         final_content+=$'\n'
         final_content+="$new_content"     
     fi
+fi
+
+# Remove variables in target that are missing in source
+if [ "$remove" = true ]
+then
+    log verbose "Removing variables missing in source from target file..."
+    if [ -z "$final_content" ]
+    then
+        final_content=$(cat "$target_file")
+    fi
+    new_final_content=""
+    while IFS= read -r line
+    do
+        if [[ "$line" =~ ^[[:space:]]*# ]]
+        then
+            new_final_content+="$line"$'\n'
+            continue
+        fi
+        if echo "$line" | grep -qE "^[[:space:]]*[a-zA-Z_][^=]*="
+        then
+            target_key=$(echo "$line" | cut -d '=' -f 1 | tr -d ' ')
+            target_key_lower=$(echo "$target_key" | tr '[:upper:]' '[:lower:]')
+            exists=false
+            for source_key in "${source_keys[@]}"
+            do
+                source_key_lower=$(echo "$source_key" | tr '[:upper:]' '[:lower:]')
+                if [ "$source_key_lower" = "$target_key_lower" ]
+                then
+                    exists=true
+                    break
+                fi
+            done
+            if [ "$exists" = true ]
+            then
+                new_final_content+="$line"$'\n'
+            else
+                log verbose "Removed obsolete variable: $line"
+            fi
+        else
+            new_final_content+="$line"$'\n'
+        fi
+    done < <(echo "$final_content")
+    final_content="$new_final_content"
 fi
 
 # Output or write the modified content if final_content is not empty
